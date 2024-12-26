@@ -1,0 +1,164 @@
+import org.openqa.selenium.By;
+import org.openqa.selenium.chrome.ChromeDriver;
+import java.util.ArrayList;
+
+public class DemoAutomation {
+
+	static String websiteURL = "https://www.saucedemo.com/v1/";
+	static String chosenBrowser = "webdriver.chrome.driver";
+	static String chosenBrowserLocation = "C:\\Users\\99559\\Downloads\\chromedriver-win64\\chromedriver.exe";
+
+	static String correctUsername = "standard_user";
+	static String correctPass = "secret_sauce";
+
+	static String usernameButton = "user-name";
+	static String passwordButton = "password";
+	static String logInButton = "login-button";
+
+	static String empty = "";
+	static String space = " ";
+	static String wrongUsername = "notIntheBase";
+	static String wrongPass = "notInTheBaseP";
+	static String tmp;
+
+	static ArrayList<String> wrongUserNameCreds = new ArrayList<>();
+	static ArrayList<String> wrongPasscreds = new ArrayList<>();
+
+	static ArrayList<String> credsFailed = new ArrayList<>();
+
+	static ChromeDriver driver;
+
+	private static void arrayFiller() {
+		wrongUserNameCreds.add(wrongUsername);
+		wrongUserNameCreds.add(empty);
+		wrongUserNameCreds.add(space);
+		tmp = correctUsername.toUpperCase();
+		if (!tmp.equals(correctUsername)) {
+			wrongUserNameCreds.add(tmp);
+
+		}
+		tmp = correctUsername.toLowerCase();
+		if (!tmp.equals(correctUsername)) {
+			wrongUserNameCreds.add(tmp);
+		}
+
+		wrongPasscreds.add(wrongPass);
+		wrongPasscreds.add(empty);
+		wrongPasscreds.add(space);
+		tmp = correctPass.toUpperCase();
+		if (tmp != correctPass) {
+			wrongPasscreds.add(tmp);
+
+		}
+		tmp = correctPass.toLowerCase();
+		if (tmp != correctPass) {
+			wrongPasscreds.add(tmp);
+		}
+
+		wrongUserNameCreds.add(correctPass);
+		wrongPasscreds.add(correctUsername);
+
+	}
+
+	private void chromeSetup() {
+		System.setProperty(chosenBrowser, chosenBrowserLocation);
+		driver = new ChromeDriver();
+		driver.get(websiteURL);
+	}
+
+	private void correctCreds() {
+		driver.findElement(By.id(usernameButton)).sendKeys(correctUsername);
+		driver.findElement(By.id(passwordButton)).sendKeys(correctPass);
+		driver.findElement(By.id(logInButton)).click();
+		if (driver.findElements(By.id(logInButton)).size() == 0) {
+			System.out.println("Test with the correct creds Passed");
+		} else {
+			System.out.println("Test with the correct creds Failed");
+			credsFailed.add(correctUsername + "  " + correctPass);
+
+		}
+		driver.close();
+	}
+
+	private void testTheArrays() {
+		driver.findElement(By.id(usernameButton)).clear();
+		driver.findElement(By.id(passwordButton)).clear();
+		for (int i = 0; i < wrongUserNameCreds.size(); i++) {
+			for (int j = 0; j < wrongUserNameCreds.size(); j++) {
+				driver.findElement(By.id(usernameButton)).sendKeys(wrongUserNameCreds.get(i));
+				driver.findElement(By.id(passwordButton)).sendKeys(wrongPasscreds.get(j));
+				driver.findElement(By.id(logInButton)).click();
+
+				if (driver.findElements(By.id(logInButton)).size() == 0) {
+					System.out.println("Test Failed, user logged in with wrong creds");
+					credsFailed.add(wrongUserNameCreds.get(i) + "  " + wrongPasscreds.get(j));
+					driver.close();
+					chromeSetup();
+				}
+				driver.findElement(By.id(usernameButton)).clear();
+				driver.findElement(By.id(passwordButton)).clear();
+			}
+		}
+	}
+
+	private void correctUsernameASCII() {
+		driver.findElement(By.id(usernameButton)).clear();
+		driver.findElement(By.id(passwordButton)).clear();
+		driver.findElement(By.id(usernameButton)).sendKeys(correctUsername);
+
+		for (int i = 0; i < 128; i++) {
+			tmp = "" + (char) i;
+			driver.findElement(By.id(passwordButton)).sendKeys(tmp);
+			driver.findElement(By.id(logInButton)).click();
+
+			if (driver.findElements(By.id(logInButton)).size() == 0) {
+				System.out.println("Test Failed, user logged in with wrong creds");
+				credsFailed.add(correctUsername + "  " + (char) i);
+				driver.close();
+				chromeSetup();
+
+			}
+			driver.findElement(By.id(passwordButton)).clear();
+		}
+
+	}
+
+	private void correctPassASCII() {
+		driver.findElement(By.id(usernameButton)).clear();
+		driver.findElement(By.id(passwordButton)).clear();
+		driver.findElement(By.id(passwordButton)).sendKeys(correctPass);
+		for (int i = 0; i < 128; i++) {
+			tmp = "" + (char) i;
+			driver.findElement(By.id(usernameButton)).sendKeys(tmp);
+			driver.findElement(By.id(logInButton)).click();
+
+			if (driver.findElements(By.id(logInButton)).size() == 0) {
+				System.out.println("Test Failed, user logged in with wrong creds");
+				credsFailed.add(correctUsername + "  " + (char) i);
+				driver.close();
+				chromeSetup();
+			}
+			driver.findElement(By.id(passwordButton)).clear();
+
+		}
+
+	}
+
+	public static void main(String[] args) {
+		DemoAutomation demo = new DemoAutomation();
+		arrayFiller();
+		demo.chromeSetup();
+		demo.correctCreds();
+		demo.chromeSetup();
+		demo.testTheArrays();
+		demo.correctUsernameASCII();
+		demo.correctPassASCII();
+		driver.close();
+
+		if (credsFailed.size() == 0) {
+			System.out.println("All Tests Passed.");
+		}else {
+			
+		}
+	}
+}
